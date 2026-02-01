@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zarin Express Modern</title>
+
+<!-- PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- BARCODE -->
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+
+<!-- EXCEL -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif}
+body{background:#f4f6fb}
+
+:root{
+--navy:#0b3161;
+--orange:#f58220;
+}
+
+/* AUTH */
+#auth{
+position:fixed;
+inset:0;
+background:linear-gradient(135deg,#0b3161,#1e4f91);
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+.auth-box{
+background:#fff;
+padding:40px;
+width:380px;
+border-radius:20px;
+box-shadow:0 10px 30px rgba(0,0,0,.2);
+text-align:center;
+}
+
+.auth-box img{
+width:80px;
+height:80px;
+border-radius:50%;
+object-fit:cover;
+margin-bottom:15px;
+border:3px solid var(--orange);
+}
+
+.auth-box h3{margin-bottom:15px}
+
+input,textarea{
+width:100%;
+padding:12px;
+border-radius:8px;
+border:1px solid #ccc;
+margin:6px 0;
+}
+
+button{
+padding:12px;
+border:none;
+border-radius:8px;
+border:none;
+background:var(--orange);
+background:var(--orange);
+color:#fff;
+font-weight:600;
+cursor:pointer;
+}
+
+button:hover{opacity:.9}
+
+#app{display:none}
+.link-orange{
+    color: var(--orange);
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.link-orange:hover{
+    text-decoration: none;
+}
+.link-orange{
+    color: var(--orange);
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.link-orange:hover{
+    text-decoration: none;
+}
+
+/* SIDEBAR */
+.sidebar{
+width:230px;
+background:var(--navy);
+background:var(--navy);
+color:#fff;
+height:100vh;
+position:fixed;
+}
+
+.sidebar .logo{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:25px 10px;
+    gap:8px;
+}
+
+.sidebar .logo img{
+width:80px;
+height:60px;
+border-radius:50%;
+border:2px solid #fff;
+}
+
+.sidebar button{
+width:100%;
+padding:14px 20px;
+border:none;
+background:none;
+background:none;
+color:#ccc;
+text-align:left;
+cursor:pointer;
+}
+
+.sidebar button.active,
+.sidebar button:hover{
+background:rgba(255,255,255,.1);
+color:#fff;
+border-left:4px solid var(--orange);
+}
+
+main{
+margin-left:230px;
+padding:25px;
+}
+
+/* CARD */
+.card{
+background:#fff;
+padding:25px;
+border-radius:15px;
+margin-bottom:20px;
+box-shadow:0 5px 15px rgba(0,0,0,.08);
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+gap:20px;
+}
+
+.page{display:none}
+.page.active{display:block}
+
+/* TABLE */
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,td{
+padding:10px;
+border-bottom:1px solid #eee;
+}
+
+th{background:#f1f5f9}
+
+.topbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+}
+
+.logout{
+background:#dc2626;
+background:#dc2626;
+}
+/* TIMELINE NAVY */
+
+.timeline{
+margin-top:25px;
+position:relative;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.timeline::before{
+content:'';
+position:absolute;
+top:50%;
+left:0;
+right:0;
+height:5px;
+background:#c7d2fe;
+border-radius:10px;
+z-index:0;
+}
+
+.step-box{
+width:33%;
+text-align:center;
+position:relative;
+z-index:2;
+}
+
+.step-circle{
+width:24px;
+height:24px;
+border-radius:50%;
+background:#e0e7ff;
+margin:0 auto 8px;
+border:4px solid #fff;
+box-shadow:0 0 0 2px var(--navy);
+}
+
+.step-circle.done{
+background:var(--orange);
+box-shadow:0 0 0 2px var(--orange);
+}
+
+.step-circle.active{
+background:var(--navy);
+}
+
+.step-text{
+font-size:13px;
+font-weight:600;
+color:#475569;
+}
+
+.step-text.done{
+color:var(--orange);
+}
+
+.step-text.active{
+color:var(--navy);
+}
+
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth">
+<div class="auth-box" id="regBox">
+<img src="zarinexpress.png">
+<h3>Register</h3>
+<form onsubmit="register(event)">
+<input type="email" id="regEmail" placeholder="Email" required>
+<input type="password" id="regPass" placeholder="Password" required>
+<button>Daftar</button>
+</form>
+<p>Sudah punya akun? <a href="#" onclick="showLogin()" class="link-orange">Login</a>
+</p>
+
+</div>
+<div class="auth-box" id="loginBox" style="display:none">
+<img src="zarinexpress.png">
+<h3>Login</h3>
+<form onsubmit="login(event)">
+<input type="email" id="logEmail" placeholder="Email" required>
+<input type="password" id="logPass" placeholder="Password" required>
+<button>Login</button>
+</form>
+<p>Belum punya akun? <a href="#" onclick="showReg()" class="link-orange">Daftar</a>
+</p>
+</div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+<div class="sidebar">
+<div class="logo">
+<img src="zarinexpress.png">
+<h4>ZARIN</h4>
+</div>
+
+<button id="b-dash" class="active" onclick="nav('dash')">Dashboard</button>
+<button id="b-input" onclick="nav('input')">Transaksi</button>
+<button id="b-hist" onclick="nav('hist')">History</button>
+<button id="b-track" onclick="nav('track')">Tracking</button>
+<button class="logout" onclick="logout()">Logout</button>
+
+</div>
+
+<main>
+
+<div class="topbar">
+<h2>Dashboard</h2>
+<button onclick="exportExcel()">Export Excel</button>
+</div>
+
+<!-- DASH -->
+<div id="dash" class="page active">
+<div class="grid">
+<div class="card">
+<h4>Total Paket</h4>
+<h1 id="total">0</h1>
+</div>
+<div class="card">
+<h4>User Aktif</h4>
+<h1 id="userCount">0</h1>
+</div>
+</div>
+</div>
+
+<!-- INPUT -->
+<div id="input" class="page">
+<div class="card">
+<h3>Input Pengiriman</h3>
+<form onsubmit="save(event)">
+
+<h4>Pengirim</h4>
+<input id="sNama" placeholder="Nama">
+<input id="sHp" placeholder="No HP">
+<textarea id="sAddr" placeholder="Alamat"></textarea>
+
+<h4>Penerima</h4>
+<input id="rNama" placeholder="Nama">
+<input id="rHp" placeholder="No HP">
+<textarea id="rAddr" placeholder="Alamat"></textarea>
+
+<h4>Paket</h4>
+<input id="berat" type="number" value="1" oninput="calc()">
+<input id="qty" type="number" value="1" oninput="calc()">
+<input id="harga" readonly>
+<textarea id="ket" placeholder="Keterangan"></textarea>
+
+<button>Simpan & PDF</button>
+</form>
+</div>
+</div>
+
+<!-- HISTORY -->
+<div id="hist" class="page">
+<div class="card">
+<h3>History</h3>
+<table>
+<thead>
+<tr>
+<th>Resi</th>
+<th>Nama</th>
+<th>Harga</th>
+<th>User</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
+</div>
+<!-- TRACKING -->
+<div id="track" class="page">
+<div class="card">
+
+<h3>Lacak Paket</h3>
+
+<input id="trackResi" placeholder="Masukkan Nomor Resi">
+<br><br>
+
+<button onclick="trackResi()">Lacak</button>
+
+<br><br>
+
+<div id="trackResult"></div>
+
+</div>
+</div>
+
+</main>
+</div>
+
+<script>
+const { jsPDF } = window.jspdf;
+
+let users=JSON.parse(localStorage.getItem('users'))||[];
+let data=JSON.parse(localStorage.getItem('data'))||[];
+let currentUser=null;
+
+function init(){
+updateStatus();
+update();
+userCount.innerText = users.length;
+}
+
+function updateStatus(){
+
+let now = Date.now();
+
+data.forEach(p => {
+
+let diff = (now - p.time) / 60000; // menit
+
+if(diff > 10){
+p.status = "Sampai";
+}
+else if(diff > 5){
+p.status = "Dikirim";
+}
+else{
+p.status = "Packing";
+}
+
+});
+
+localStorage.setItem("data", JSON.stringify(data));
+}
+
+/* AUTH */
+function showReg(){loginBox.style.display='none';regBox.style.display='block'}
+function showLogin(){regBox.style.display='none';loginBox.style.display='block'}
+
+function register(e){
+e.preventDefault();
+
+let email = document.getElementById('regEmail').value;
+let pass  = document.getElementById('regPass').value;
+
+if(users.find(u=>u.email==email)){
+alert('Sudah terdaftar');return;
+}
+
+users.push({email:email,pass:pass});
+localStorage.setItem('users',JSON.stringify(users));
+
+alert('Berhasil daftar');
+showLogin();
+}
+function login(e){
+e.preventDefault();
+
+let email = document.getElementById('logEmail').value;
+let pass  = document.getElementById('logPass').value;
+
+let u = users.find(x=>x.email==email && x.pass==pass);
+
+if(!u){
+alert('Email / Password salah');
+return;
+}
+
+currentUser = u.email;
+
+auth.style.display='none';
+app.style.display='block';
+
+userCount.innerText = users.length;
+}
+
+
+function logout(){
+location.reload();
+}
+
+/* NAV */
+function nav(id){
+document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+document.querySelectorAll('.sidebar button').forEach(b=>b.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+document.getElementById('b-'+id).classList.add('active');
+}
+
+/* HARGA */
+function calc(){
+harga.value='Rp '+(berat.value*qty.value*15000).toLocaleString();
+}
+
+/* SAVE */
+function save(e){
+e.preventDefault();
+
+let resi='ZR'+Date.now();
+
+let obj = {
+resi,
+nama: rNama.value,
+harga: harga.value,
+user: currentUser,
+
+time: Date.now(),   // waktu input
+status: "Packing"   // status awal
+};
+
+
+
+data.push(obj);
+localStorage.setItem('data',JSON.stringify(data));
+
+update();
+
+/* BARCODE */
+let svg=document.createElement('svg');
+JsBarcode(svg,resi);
+
+/* PDF */
+let doc=new jsPDF();
+doc.text('ZARIN EXPRESS',20,20);
+doc.text('Resi : '+resi,20,35);
+doc.text('Nama : '+rNama.value,20,45);
+doc.text('Harga : '+harga.value,20,55);
+doc.save(resi+'.pdf');
+
+alert('Tersimpan');
+nav('hist');
+}
+
+/* UPDATE */
+function update(){
+total.innerText=data.length;
+tbody.innerHTML='';
+
+data.forEach(d=>{
+tbody.innerHTML+=`
+<tr>
+<td>${d.resi}</td>
+<td>${d.nama}</td>
+<td>${d.harga}</td>
+<td>${d.user}</td>
+</tr>`;
+});
+}
+
+/* EXPORT */
+function exportExcel(){
+let ws=XLSX.utils.json_to_sheet(data);
+let wb=XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb,ws,'Data');
+XLSX.writeFile(wb,'zarin_data.xlsx');
+}
+/* TRACKING */
+function trackResi(){
+
+let r = document.getElementById('trackResi').value;
+let box = document.getElementById('trackResult');
+
+let res = data.find(x => x.resi == r);
+
+if(!res){
+box.innerHTML = '<p style="color:red">❌ Resi tidak ditemukan</p>';
+return;
+}
+
+// hitung waktu
+let menit = Math.floor((Date.now() - res.time)/60000);
+
+// timeline
+let pack = menit >= 0 ? "done" : "";
+let kirim = menit >= 5 ? "done" : "";
+let sampai = menit >= 10 ? "done" : "";
+
+box.innerHTML = `
+<h4>Status Pengiriman</h4>
+
+<p><b>Resi:</b> ${res.resi}</p>
+<p><b>Nama:</b> ${res.nama}</p>
+
+<div class="timeline">
+
+  <div class="step-box">
+    <div class="step-circle ${pack ? 'done' : 'active'}"></div>
+    <div class="step-text ${pack ? 'done' : 'active'}">Packing</div>
+  </div>
+
+  <div class="step-box">
+    <div class="step-circle ${kirim ? 'done' : ''}"></div>
+    <div class="step-text ${kirim ? 'done' : ''}">Dikirim</div>
+  </div>
+
+  <div class="step-box">
+    <div class="step-circle ${sampai ? 'done' : ''}"></div>
+    <div class="step-text ${sampai ? 'done' : ''}">Sampai</div>
+  </div>
+
+</div>
+
+<p style="margin-top:15px"><b>Status Saat Ini:</b> ${res.status}</p>
+`;
+}
+
+</script>
+
+</body>
+</html>
